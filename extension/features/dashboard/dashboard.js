@@ -1833,7 +1833,7 @@ Need an API key? Visit: https://makersuite.google.com/app/apikey`;
         message += `Total Size: ${diagnostics.storageState?.totalSizeMB || 0}MB\n`;
         message += `Quota Remaining: ${diagnostics.storageState?.quotaRemainingMB || 0}MB\n`;
 
-        if (diagnostics.repairResult && diagnostics.repairResult.repaired) {
+        if (diagnostics.repairResult?.repaired) {
           message += '\n⚠️ Repairs Made:\n';
           message += `Corrupted snapshots removed: ${diagnostics.repairResult.removed}\n`;
           if (diagnostics.repairResult.validRemaining !== undefined) {

@@ -619,4 +619,3 @@ export class RedirectResolver {
     return { ...this.stats };
   }
 }
-

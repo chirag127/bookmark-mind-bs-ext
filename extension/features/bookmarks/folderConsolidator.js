@@ -369,4 +369,3 @@ export class FolderConsolidator {
     }
   }
 }
-

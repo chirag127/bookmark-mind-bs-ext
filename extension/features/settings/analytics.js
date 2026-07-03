@@ -1,5 +1,5 @@
-import { PerformanceMonitor } from "../../analytics/performanceMonitor.js";
-import { AnalyticsService } from "../../analytics/analyticsService.js";
+import { AnalyticsService } from '../../analytics/analyticsService.js';
+import { PerformanceMonitor } from '../../analytics/performanceMonitor.js';
 /**
  * BookmarkMind - Analytics Dashboard
  * Display performance metrics and usage statistics

@@ -496,7 +496,7 @@ class OptionsController {
         action: 'getLearningStatistics'
       });
 
-      if (response && response.success) {
+      if (response?.success) {
         const stats = response.data;
         console.log('📚 Loaded learning statistics:', stats);
         this.displayLearningStatistics(stats);
@@ -613,7 +613,7 @@ class OptionsController {
         action: 'exportLearningData'
       });
 
-      if (response && response.success) {
+      if (response?.success) {
         const dataStr = JSON.stringify(response.data, null, 2);
         const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -665,7 +665,7 @@ class OptionsController {
               }
             });
 
-            if (response && response.success) {
+            if (response?.success) {
               this.showToast(`Imported ${response.data.patternsCount} patterns`, 'success');
               this.loadLearningData();
               this.loadStats();
@@ -865,7 +865,7 @@ class OptionsController {
     this.testGeminiKeyBtn.disabled = true;
 
     try {
-      console.log('Testing Gemini API key:', apiKey.substring(0, 10) + '...');
+      console.log('Testing Gemini API key:', `${apiKey.substring(0, 10)}...`);
 
       const messagePromise = chrome.runtime.sendMessage({
         action: 'testApiKey',
@@ -880,7 +880,7 @@ class OptionsController {
 
       console.log('Gemini API key test response:', response);
 
-      if (response && response.success && response.valid) {
+      if (response?.success && response.valid) {
         this.showApiKeyStatus('✓ Gemini API key is valid! Saving...', 'success');
 
         this.settings.apiKey = apiKey;
@@ -991,7 +991,7 @@ class OptionsController {
     this.testCerebrasKeyBtn.disabled = true;
 
     try {
-      console.log('Testing Cerebras API key:', apiKey.substring(0, 10) + '...');
+      console.log('Testing Cerebras API key:', `${apiKey.substring(0, 10)}...`);
 
       const response = await fetch('https://api.cerebras.ai/v1/chat/completions', {
         method: 'POST',
@@ -1344,7 +1344,7 @@ class OptionsController {
     const currentName = this.settings.categories[index];
     const newName = prompt('Edit category name:', currentName);
 
-    if (newName && newName.trim() && newName !== currentName) {
+    if (newName?.trim() && newName !== currentName) {
       const trimmedName = newName.trim();
 
       // Check for duplicates
@@ -1567,9 +1567,7 @@ class OptionsController {
       // Show confirmation dialog
       const threshold = this.settings.minBookmarksThreshold || 3;
       const confirmed = confirm(
-        `This will move bookmarks from folders with less than ${threshold} bookmarks to their parent folders. ` +
-          'Empty folders will also be removed. This action cannot be undone.\n\n' +
-          'Do you want to continue?'
+        `This will move bookmarks from folders with less than ${threshold} bookmarks to their parent folders. Empty folders will also be removed. This action cannot be undone.\n\nDo you want to continue?`
       );
 
       if (!confirmed) {
@@ -1607,13 +1605,9 @@ class OptionsController {
       }
 
       // Show preview and confirm
-      const previewMessage =
-        `Found ${preview.sparseFolders.length} sparse folders and ${preview.emptyFolders.length} empty folders.\n` +
-        `This will move ${preview.totalBookmarksToMove} bookmarks and remove ${preview.totalFoldersToRemove} folders.\n\n` +
-        `Sparse folders:\n${preview.sparseFolders
-          .map((f) => `• ${f.name} (${f.bookmarkCount} bookmarks)`)
-          .join('\n')}\n\n` +
-        'Continue with consolidation?';
+      const previewMessage = `Found ${preview.sparseFolders.length} sparse folders and ${preview.emptyFolders.length} empty folders.\nThis will move ${preview.totalBookmarksToMove} bookmarks and remove ${preview.totalFoldersToRemove} folders.\n\nSparse folders:\n${preview.sparseFolders
+        .map((f) => `• ${f.name} (${f.bookmarkCount} bookmarks)`)
+        .join('\n')}\n\nContinue with consolidation?`;
 
       const finalConfirm = confirm(previewMessage);
       if (!finalConfirm) {
@@ -1635,13 +1629,7 @@ class OptionsController {
       const results = consolidateResponse.data;
 
       // Show success message
-      const successMessage =
-        'Consolidation completed!\n\n' +
-        '📊 Results:\n' +
-        `• Folders processed: ${results.foldersProcessed}\n` +
-        `• Bookmarks moved: ${results.bookmarksMoved}\n` +
-        `• Folders removed: ${results.foldersRemoved}\n\n` +
-        'Your bookmark structure has been optimized!';
+      const successMessage = `Consolidation completed!\n\n📊 Results:\n• Folders processed: ${results.foldersProcessed}\n• Bookmarks moved: ${results.bookmarksMoved}\n• Folders removed: ${results.foldersRemoved}\n\nYour bookmark structure has been optimized!`;
 
       this.showToast('Folder consolidation completed successfully!', 'success');
       alert(successMessage);
@@ -2082,14 +2070,12 @@ class OptionsController {
    */
   async exportReport(format) {
     try {
-      const startDate =
-        this.exportStartDate && this.exportStartDate.value
-          ? new Date(this.exportStartDate.value).getTime()
-          : null;
-      const endDate =
-        this.exportEndDate && this.exportEndDate.value
-          ? new Date(this.exportEndDate.value).getTime()
-          : null;
+      const startDate = this.exportStartDate?.value
+        ? new Date(this.exportStartDate.value).getTime()
+        : null;
+      const endDate = this.exportEndDate?.value
+        ? new Date(this.exportEndDate.value).getTime()
+        : null;
 
       const response = await chrome.runtime.sendMessage({
         action: 'exportAnalyticsReport',

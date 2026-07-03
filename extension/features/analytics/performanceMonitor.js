@@ -648,4 +648,3 @@ export class PerformanceMonitor {
     };
   }
 }
-

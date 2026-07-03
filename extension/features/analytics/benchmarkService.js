@@ -759,4 +759,3 @@ export class BenchmarkService {
     console.log('✅ Benchmark history cleared');
   }
 }
-

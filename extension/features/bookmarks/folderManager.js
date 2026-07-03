@@ -290,4 +290,3 @@ export class FolderManager {
     this.folderCache.clear();
   }
 }
-
