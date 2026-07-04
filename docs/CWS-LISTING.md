@@ -134,81 +134,60 @@ folder based on what the site does.
 
 ## Permission justifications (privacy tab — MANDATORY per permission)
 
+<!-- BEGIN-AUTOGEN:PERMISSIONS -->
 **`bookmarks`**
+
 ```
-BookmarkMind reads the user's bookmark tree to identify uncategorized
-bookmarks and rearrange them into AI-generated folders. Every operation
-is initiated by an explicit user click ("Categorize All Bookmarks"). No
-bookmark data is shared with anyone other than the LLM provider the user
-configured.
+BookmarkMind reads the user's bookmark tree to identify uncategorized bookmarks and rearrange them into AI-generated folders. Every operation is initiated by an explicit user click ("Categorize All Bookmarks"). No bookmark data is shared with anyone other than the LLM provider the user configured.
 ```
 
 **`storage`**
-```
-BookmarkMind stores per-provider API keys (AES-GCM encrypted) in
-chrome.storage.sync so they roam across the user's Chrome installs. It
-also stores user preferences (batch size, provider fallback order) and
-persistent categorization state (so a large categorization can survive
-service worker restarts).
-```
 
-**`tabs`**
 ```
-BookmarkMind reads currently-open tab titles to enrich bookmark
-categorization — a live tab title is more accurate than a stale bookmark
-title stored years ago. It never modifies or navigates tabs, only reads
-titles.
-```
-
-**`notifications`**
-```
-BookmarkMind shows a system notification when a categorization batch
-completes so the user knows to check the result without leaving their
-current tab.
-```
-
-**`alarms`**
-```
-BookmarkMind schedules alarms to resume batch categorization after the
-Chrome service worker suspends between batches (Chrome suspends idle
-service workers to save memory).
+BookmarkMind stores per-provider API keys (AES-GCM encrypted) in chrome.storage.sync so they roam across the user's Chrome installs. It also stores user preferences (batch size, provider fallback order) and persistent categorization state (so a large categorization can survive service worker restarts).
 ```
 
 **`activeTab`**
+
 ```
-BookmarkMind reads the currently-active tab's title when the user clicks
-the extension icon, so it can offer to categorize the current page as a
-bookmark.
+BookmarkMind reads the currently-active tab's title when the user clicks the extension icon, so it can offer to categorize the current page as a bookmark.
+```
+
+**`tabs`**
+
+```
+BookmarkMind reads currently-open tab titles to enrich bookmark categorization — a live tab title is more accurate than a stale bookmark title stored years ago. It never modifies or navigates tabs, only reads titles.
+```
+
+**`notifications`**
+
+```
+BookmarkMind shows a system notification when a categorization batch completes so the user knows to check the result without leaving their current tab.
+```
+
+**`alarms`**
+
+```
+BookmarkMind schedules alarms to resume batch categorization after the Chrome service worker suspends between batches (Chrome suspends idle service workers to save memory).
 ```
 
 **`<all_urls>` host permission (JUSTIFY EXTENSIVELY — CWS reviews this)**
-```
-BookmarkMind supports 13 built-in OpenAI-compatible LLM providers PLUS
-a "custom provider" feature where the user enters any HTTPS endpoint.
-Because the extension cannot enumerate all possible provider URLs in
-advance (users may point at self-hosted vLLM, corporate proxies,
-localhost:1234 for LM Studio, or any other OpenAI-compat server),
-<all_urls> is required.
 
-BookmarkMind ONLY makes network requests to endpoints the user has
-explicitly configured in the Options page. It never makes background
-network requests, never phones home, and has no telemetry. The user's
-provider configuration in chrome.storage.sync is the ONLY source of
-truth for network destinations.
-
-Alternative (optional_host_permissions) was considered but rejected
-because it would trigger a permission dialog every time the user adds a
-new provider, which interrupts batch categorization flows across
-multiple providers.
 ```
+BookmarkMind supports 13 built-in OpenAI-compatible LLM providers PLUS a "custom provider" feature where the user enters any HTTPS endpoint. Because the extension cannot enumerate all possible provider URLs in advance (users may point at self-hosted vLLM, corporate proxies, localhost:1234 for LM Studio, or any other OpenAI-compat server), <all_urls> is required.
+
+BookmarkMind ONLY makes network requests to endpoints the user has explicitly configured in the Options page. It never makes background network requests, never phones home, and has no telemetry. The user's provider configuration in chrome.storage.sync is the ONLY source of truth for network destinations.
+
+Alternative (optional_host_permissions) was considered but rejected because it would trigger a permission dialog every time the user adds a new provider, which interrupts batch categorization flows across multiple providers.
+```
+
+<!-- END-AUTOGEN:PERMISSIONS -->
 
 ## Privacy policy URL
 
 ```
-https://chirag127.github.io/bookmark-mind-bs-ext/PRIVACY.html
+https://chirag127.github.io/bookmark-mind-bs-ext/docs/PRIVACY.md
 ```
-(NOTE: needs to be published — see the accompanying PRIVACY.md → publish
-via GitHub Pages or Cloudflare Pages before submission)
 
 ## Support / homepage URL
 
@@ -218,26 +197,22 @@ https://github.com/chirag127/bookmark-mind-bs-ext
 
 ---
 
-## Screenshots (need to be captured before submission)
+## Assets to upload
 
-Chrome Web Store requires 1-5 screenshots at 1280×800 or 640×400 PNG/JPG.
+All pre-generated in `docs/cws-assets/` via `npm run screenshots`:
 
-Recommended shot list:
+| Slot | File | Dimensions |
+|---|---|---|
+| Store icon | `extension/icons/icon128.png` | 128×128 |
+| Screenshot 1 (Options — providers) | `docs/cws-assets/screenshot-1-providers.png` | 1280×800 |
+| Screenshot 2 (Add provider modal) | `docs/cws-assets/screenshot-2-add-provider.png` | 1280×800 |
+| Screenshot 3 (Custom provider modal) | `docs/cws-assets/screenshot-3-custom-provider.png` | 1280×800 |
+| Screenshot 4 (Categorization progress) | `docs/cws-assets/screenshot-4-categorize.png` | 1280×800 |
+| Screenshot 5 (Before / after) | `docs/cws-assets/screenshot-5-before-after.png` | 1280×800 |
+| Promo tile small | `docs/cws-assets/promo-small.png` | 440×280 |
+| Promo tile marquee | `docs/cws-assets/promo-marquee.png` | 1400×560 |
 
-1. **Options page — provider list** (13 provider cards with drag handles,
-   test buttons, model dropdowns).
-2. **Add provider modal** (preset picker showing all 13 providers with
-   free-tier badges).
-3. **Add custom provider modal** (baseUrl + auth scheme + defaultModel fields).
-4. **Popup — categorization in progress** (progress bar, batch counter,
-   category count).
-5. **Bookmark bar — before/after** (chaotic tree on left, organized
-   hierarchical tree on right).
-
-## Promo tile (optional but recommended)
-
-- Small: 440×280 PNG
-- Marquee: 1400×560 PNG
+Regenerate anytime: `npm run screenshots`.
 
 ---
 

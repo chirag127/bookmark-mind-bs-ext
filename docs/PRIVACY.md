@@ -79,23 +79,38 @@ the LLM provider(s) you configured**:
 When you configure BookmarkMind with a provider (say, Groq or OpenAI), your
 bookmark titles + URLs + your API key are sent to THAT provider on each
 categorization. Each provider has its own privacy policy that governs how
-they process your data. Notable examples:
+they process your data.
 
-- **Groq**: https://groq.com/privacy-policy
-- **Cerebras**: https://cerebras.ai/privacy-policy
-- **Google Gemini** (via API): https://ai.google.dev/gemini-api/terms.
-  Free-tier prompts to Gemini are used to train Google's models — this is
-  Google's policy, not ours.
-- **Mistral** (Experiment plan): prompts are used to train Mistral by
-  default unless you opt out.
-- **OpenAI, OpenRouter, DeepSeek, Novita, HuggingFace, LiteLLM**: see
-  respective policies.
-- **Localhost providers** (Ollama, LM Studio, OmniRoute, LiteLLM proxy):
-  data never leaves your machine.
+The built-in provider catalog (auto-generated from `extension/lib/providers/registry.js`):
+
+<!-- BEGIN-AUTOGEN:PROVIDERS -->
+| Provider | Tier | Base URL | Notes |
+|---|---|---|---|
+| Groq | 🎁 Permanent free | `https://api.groq.com/openai/v1` | 30 RPM, 500K tokens/day. No card. Fastest inference in fleet. |
+| Cerebras | 🎁 Permanent free | `https://api.cerebras.ai/v1` | 1M tokens/day, 30 RPM, no card. 8K context cap on free tier. |
+| Google Gemini | 🎁 Permanent free | `https://generativelanguage.googleapis.com/v1beta/openai` | Free tier, no card. Not available in EU/UK/CH. Prompts train models. |
+| OpenRouter | 🎁 Permanent free | `https://openrouter.ai/api/v1` | Aggregator. 20+ :free models. 20 RPM / 50 RPD free, 1K RPD with $10 credit. |
+| Mistral (Experiment) | 🎁 Permanent free | `https://api.mistral.ai/v1` | Experiment plan: 1 RPS, 500K TPM. Prompts train Mistral unless opted out. |
+| HuggingFace Router | 🎁 Permanent free | `https://router.huggingface.co/v1` | Free tier included with HF account. Cold starts can be 30s+. |
+| Novita | ⏳ Trial credits | `https://api.novita.ai/v3/openai` | $0.50 signup credits, 60 RPM. 120+ models. |
+| DeepSeek | ⏳ Trial credits | `https://api.deepseek.com/v1` | 5M tokens on signup, 30 days. Card required past trial. |
+| OpenAI | ⏳ Trial credits | `https://api.openai.com/v1` | Trial credits inconsistent by region. Card required past trial. |
+| LM Studio (localhost) | 🏠 Localhost | `http://localhost:1234/v1` | Runs local models. Start LM Studio server first. No key needed. |
+| Ollama (localhost) | 🏠 Localhost | `http://localhost:11434/v1` | Local models via Ollama. Set OLLAMA_ORIGINS=chrome-extension://* env var. |
+| LiteLLM Proxy | 🔑 BYOK | `http://localhost:4000/v1` | Route to any provider via self-hosted LiteLLM proxy. Edit baseUrl. |
+| OmniRoute (localhost) | 🏠 Localhost | `http://localhost:20128/v1` | 60+ free models routed via local OmniRoute dev server. No key needed. |
+<!-- END-AUTOGEN:PROVIDERS -->
+
+Notable per-provider notes:
+
+- **Google Gemini** free-tier prompts are used to train Google's models — this is Google's policy, not ours.
+- **Mistral** (Experiment plan) prompts are used to train Mistral by default unless you opt out.
+- **OpenAI, OpenRouter, DeepSeek, Novita, HuggingFace, LiteLLM**: see respective policies.
+- **Localhost providers** (Ollama, LM Studio, OmniRoute, LiteLLM proxy): data never leaves your machine.
 
 BookmarkMind cannot control what happens to your data after it reaches a
 third-party provider. Choose your provider(s) accordingly. For maximum
-privacy, use a **localhost provider** (Ollama, LM Studio, OmniRoute).
+privacy, use a **localhost provider** (Ollama, LM Studio, OmniRoute, LiteLLM).
 
 ## Host permission `<all_urls>` — why we need it
 

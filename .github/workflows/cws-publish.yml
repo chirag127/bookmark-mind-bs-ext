@@ -1,0 +1,156 @@
+name: Publish to Chrome Web Store
+
+# Auto-publishes to CWS on every `v*` tag push.
+# Also builds + attaches the ZIP to the GitHub Release.
+#
+# First-run OAuth setup (documented in docs/PUBLISHING.md):
+#   1. Create an OAuth 2.0 Client (Desktop) at https://console.cloud.google.com/apis/credentials
+#   2. Enable the Chrome Web Store API for that project
+#   3. Get a refresh token via oauth-flow (documented one-time)
+#   4. Set repo secrets:
+#      - CWS_CLIENT_ID
+#      - CWS_CLIENT_SECRET
+#      - CWS_REFRESH_TOKEN
+#      - CWS_EXTENSION_ID   (32-char id from your CWS listing)
+#
+# Trigger:
+#   git tag v1.2.1 && git push --tags
+# Or:
+#   Actions → Publish to Chrome Web Store → workflow_dispatch
+
+on:
+  push:
+    tags: [v*]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version (should match manifest.json)
+        required: true
+      publish:
+        description: Also publish (else upload as draft)
+        required: false
+        default: 'true'
+        type: choice
+        options: ['true', 'false']
+
+concurrency:
+  group: cws-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Verify manifest.json version matches tag
+        run: |
+          MANIFEST_VER=$(node -p "require('./extension/manifest.json').version")
+          TAG_VER="${{ github.event.inputs.version || github.ref_name }}"
+          TAG_VER="${TAG_VER#v}"  # strip leading 'v'
+          if [ "$MANIFEST_VER" != "$TAG_VER" ]; then
+            echo "::error::manifest.json version ($MANIFEST_VER) != tag/input ($TAG_VER)"
+            exit 1
+          fi
+          echo "version=$MANIFEST_VER" >> $GITHUB_OUTPUT
+
+      - name: Regenerate docs from single source of truth
+        run: |
+          node scripts/gen-docs.mjs
+          # Fail if docs drifted from the manifest (must run gen-docs + commit before tagging)
+          if ! git diff --quiet; then
+            echo "::error::Docs are stale. Run 'npm run docs' locally and commit before tagging."
+            git diff
+            exit 1
+          fi
+
+      - name: Package extension ZIP
+        run: |
+          node scripts/package.mjs
+          ls -la dist/
+
+      - name: Refresh CWS OAuth access token
+        id: token
+        env:
+          CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+        run: |
+          if [ -z "$CLIENT_ID" ] || [ -z "$CLIENT_SECRET" ] || [ -z "$REFRESH_TOKEN" ]; then
+            echo "::warning::CWS_* secrets not set — skipping actual upload."
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          RESPONSE=$(curl -sS -X POST https://oauth2.googleapis.com/token \
+            -d "client_id=$CLIENT_ID" \
+            -d "client_secret=$CLIENT_SECRET" \
+            -d "refresh_token=$REFRESH_TOKEN" \
+            -d "grant_type=refresh_token")
+          ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r .access_token)
+          if [ "$ACCESS_TOKEN" = "null" ] || [ -z "$ACCESS_TOKEN" ]; then
+            echo "::error::Failed to refresh access token: $RESPONSE"
+            exit 1
+          fi
+          echo "::add-mask::$ACCESS_TOKEN"
+          echo "access_token=$ACCESS_TOKEN" >> $GITHUB_OUTPUT
+          echo "skip=false" >> $GITHUB_OUTPUT
+
+      - name: Upload new package to CWS
+        if: steps.token.outputs.skip != 'true'
+        env:
+          ACCESS_TOKEN: ${{ steps.token.outputs.access_token }}
+          EXT_ID: ${{ secrets.CWS_EXTENSION_ID }}
+        run: |
+          if [ -z "$EXT_ID" ]; then
+            echo "::error::CWS_EXTENSION_ID secret not set. Get it from https://chrome.google.com/webstore/devconsole (32-char id)."
+            exit 1
+          fi
+          ZIP=$(ls dist/*.zip | head -1)
+          echo "Uploading $ZIP to extension $EXT_ID..."
+          RESPONSE=$(curl -sS -X PUT \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "x-goog-api-version: 2" \
+            -T "$ZIP" \
+            "https://www.googleapis.com/upload/chromewebstore/v1.1/items/$EXT_ID")
+          echo "$RESPONSE"
+          STATUS=$(echo "$RESPONSE" | jq -r .uploadState)
+          if [ "$STATUS" != "SUCCESS" ] && [ "$STATUS" != "IN_PROGRESS" ]; then
+            echo "::error::Upload failed. State: $STATUS"
+            exit 1
+          fi
+
+      - name: Publish to Chrome Web Store
+        if: steps.token.outputs.skip != 'true' && (github.event.inputs.publish != 'false')
+        env:
+          ACCESS_TOKEN: ${{ steps.token.outputs.access_token }}
+          EXT_ID: ${{ secrets.CWS_EXTENSION_ID }}
+        run: |
+          RESPONSE=$(curl -sS -X POST \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "x-goog-api-version: 2" \
+            -H "Content-Length: 0" \
+            "https://www.googleapis.com/chromewebstore/v1.1/items/$EXT_ID/publish")
+          echo "$RESPONSE"
+          STATUS=$(echo "$RESPONSE" | jq -r '.status[0] // .error.message // "UNKNOWN"')
+          echo "Publish status: $STATUS"
+          if echo "$STATUS" | grep -qE '^(OK|ITEM_PENDING_REVIEW)$'; then
+            echo "✓ Submitted for review — check dev console for approval."
+          else
+            echo "::warning::Publish returned unexpected status: $STATUS"
+          fi
+
+      - name: Attach ZIP to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          generate_release_notes: true

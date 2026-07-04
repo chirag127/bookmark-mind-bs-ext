@@ -3,23 +3,28 @@
 BookmarkMind supports any OpenAI-compatible chat API. Thirteen providers ship built-in
 plus an "Add custom" flow for anything else.
 
+> The table below is auto-generated from `extension/lib/providers/registry.js`.
+> Do not edit by hand — run `npm run docs` to regenerate.
+
 ## Built-in providers
 
-| Provider | Free tier | Base URL |
-|---|---|---|
-| Groq | 🎁 Permanent, no card. 30 RPM. | `https://api.groq.com/openai/v1` |
-| Cerebras | 🎁 Permanent, no card. 1M tok/day, 8K ctx cap on free. | `https://api.cerebras.ai/v1` |
-| Google Gemini (OpenAI-compat) | 🎁 Permanent, no card. Not in EU/UK/CH. Trains on prompts. | `https://generativelanguage.googleapis.com/v1beta/openai` |
-| OpenRouter | 🎁 Aggregator with 20+ `:free` models. 20 RPM / 50 RPD. | `https://openrouter.ai/api/v1` |
-| Mistral (Experiment plan) | 🎁 Free. Trains on prompts unless opted out. | `https://api.mistral.ai/v1` |
-| HuggingFace Router | 🎁 Free with HF account. Cold starts 30s+. | `https://router.huggingface.co/v1` |
-| Novita | ⏳ $0.50 trial credits. | `https://api.novita.ai/v3/openai` |
-| DeepSeek | ⏳ 5M tokens on signup, 30 days. | `https://api.deepseek.com/v1` |
-| OpenAI | ⏳ Trial credits regional. | `https://api.openai.com/v1` |
-| LM Studio | 🏠 localhost. | `http://localhost:1234/v1` |
-| Ollama | 🏠 localhost. Set `OLLAMA_ORIGINS=chrome-extension://*` env var. | `http://localhost:11434/v1` |
-| LiteLLM Proxy | 🔑 BYOK via self-hosted proxy. | `http://localhost:4000/v1` |
-| OmniRoute | 🏠 localhost. 60+ free models via chirag127/OmniRoute dev server. | `http://localhost:20128/v1` |
+<!-- BEGIN-AUTOGEN:PROVIDERS -->
+| Provider | Tier | Base URL | Notes |
+|---|---|---|---|
+| Groq | 🎁 Permanent free | `https://api.groq.com/openai/v1` | 30 RPM, 500K tokens/day. No card. Fastest inference in fleet. |
+| Cerebras | 🎁 Permanent free | `https://api.cerebras.ai/v1` | 1M tokens/day, 30 RPM, no card. 8K context cap on free tier. |
+| Google Gemini | 🎁 Permanent free | `https://generativelanguage.googleapis.com/v1beta/openai` | Free tier, no card. Not available in EU/UK/CH. Prompts train models. |
+| OpenRouter | 🎁 Permanent free | `https://openrouter.ai/api/v1` | Aggregator. 20+ :free models. 20 RPM / 50 RPD free, 1K RPD with $10 credit. |
+| Mistral (Experiment) | 🎁 Permanent free | `https://api.mistral.ai/v1` | Experiment plan: 1 RPS, 500K TPM. Prompts train Mistral unless opted out. |
+| HuggingFace Router | 🎁 Permanent free | `https://router.huggingface.co/v1` | Free tier included with HF account. Cold starts can be 30s+. |
+| Novita | ⏳ Trial credits | `https://api.novita.ai/v3/openai` | $0.50 signup credits, 60 RPM. 120+ models. |
+| DeepSeek | ⏳ Trial credits | `https://api.deepseek.com/v1` | 5M tokens on signup, 30 days. Card required past trial. |
+| OpenAI | ⏳ Trial credits | `https://api.openai.com/v1` | Trial credits inconsistent by region. Card required past trial. |
+| LM Studio (localhost) | 🏠 Localhost | `http://localhost:1234/v1` | Runs local models. Start LM Studio server first. No key needed. |
+| Ollama (localhost) | 🏠 Localhost | `http://localhost:11434/v1` | Local models via Ollama. Set OLLAMA_ORIGINS=chrome-extension://* env var. |
+| LiteLLM Proxy | 🔑 BYOK | `http://localhost:4000/v1` | Route to any provider via self-hosted LiteLLM proxy. Edit baseUrl. |
+| OmniRoute (localhost) | 🏠 Localhost | `http://localhost:20128/v1` | 60+ free models routed via local OmniRoute dev server. No key needed. |
+<!-- END-AUTOGEN:PROVIDERS -->
 
 ## Adding a provider
 

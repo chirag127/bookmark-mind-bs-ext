@@ -48,3 +48,4 @@ __snapshots__/
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+.screenshot-tmp*/

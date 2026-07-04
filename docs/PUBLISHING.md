@@ -1,171 +1,190 @@
 # Publishing BookmarkMind to the Chrome Web Store
 
-Step-by-step guide from local repo → live CWS listing. Assumes you have
-this repo cloned and Node 20+ installed.
+Step-by-step from local repo → live listing. Automated via
+`.github/workflows/cws-publish.yml` — you tag `v1.2.1` and CI does the
+rest.
 
-## Prerequisites
+## Prerequisites (one-time)
 
-1. **Chrome Web Store Developer account** — one-time $5 USD registration
-   at https://chrome.google.com/webstore/devconsole. Requires a valid
-   Google account.
-2. **Node 20+** installed (`node --version`).
-3. **Publish PRIVACY.md as a public HTTPS URL** — the CWS listing needs
-   a privacy-policy URL. Options:
-   - Enable GitHub Pages on `chirag127/bookmark-mind-bs-ext` and reference
-     `https://chirag127.github.io/bookmark-mind-bs-ext/docs/PRIVACY.md`
-   - Or host it on Cloudflare Pages / any static HTTPS host.
-4. **Capture screenshots** — see `CWS-LISTING.md` § Screenshots for the
-   recommended shot list. Chrome Web Store requires 1-5 PNG/JPG images at
-   1280×800 or 640×400.
+1. **Chrome Web Store Developer account** — $5 registration at
+   https://chrome.google.com/webstore/devconsole.
+2. **Node 20+** locally (`node --version`).
+3. **Publish PRIVACY.md** as a public HTTPS URL. GitHub Pages is already
+   enabled on this repo:
+   `https://chirag127.github.io/bookmark-mind-bs-ext/docs/PRIVACY.md`
 
-## Step 1 — Build the extension ZIP
+## First manual submission (v1.2.0)
+
+Only the first release goes through the manual dev-console form; every
+subsequent release is auto-published by CI.
+
+### Build the ZIP + assets locally
 
 ```bash
-cd /path/to/bookmark-mind-bs-ext
-npm install
-npm run package
+pnpm install
+pnpm run docs         # regenerate provider tables + permission blocks
+pnpm run screenshots  # capture 5 PNGs to docs/cws-assets/ via headless Chrome
+pnpm run package      # produce dist/bookmarkmind-v1.2.0.zip
 ```
 
-This runs `scripts/package.mjs` which reads the version from
-`extension/manifest.json` and produces `dist/bookmarkmind-v1.2.0.zip`
-containing ONLY the extension/ directory contents (manifest at zip root).
-
-Verify:
+### Verify the ZIP
 
 ```bash
-# manifest.json must be at zip root, NOT nested inside `extension/`
 unzip -l dist/bookmarkmind-v1.2.0.zip | grep manifest.json
-# Should print: manifest.json (no folder prefix)
+# manifest.json must be at ZIP root, not nested inside extension/
 ```
 
-## Step 2 — Test the ZIP locally
+### Load in Chrome for smoke test
 
-1. Open Chrome → `chrome://extensions/`
-2. Enable **Developer mode** (top-right toggle)
-3. Drag-and-drop `dist/bookmarkmind-v1.2.0.zip` onto the page
-4. Verify:
-   - Extension icon appears in Chrome toolbar
-   - Clicking it opens the popup
-   - Options page loads with the new provider-list UI
-   - Adding a provider works (test with Groq — permanent free tier, no card)
-   - "Categorize" runs end-to-end on a small subset of bookmarks
+1. `chrome://extensions/` → toggle **Developer mode**
+2. Drag `dist/bookmarkmind-v1.2.0.zip` onto the page
+3. Add a provider (Groq — permanent free tier, no card)
+4. Run **Categorize All Bookmarks** on a small subset
 
-## Step 3 — Log into the CWS Developer Console
+### Create the CWS listing
 
-Visit https://chrome.google.com/webstore/devconsole.
-
-If this is your first extension:
-1. Pay the one-time $5 registration fee
-2. Verify your email + Google account
-
-## Step 4 — Create the item
-
-1. Click **+ New Item** (top-right)
+1. https://chrome.google.com/webstore/devconsole → **+ New Item**
 2. Upload `dist/bookmarkmind-v1.2.0.zip`
-3. Wait ~30 seconds for CWS to parse the manifest
+3. **Store Listing tab** — copy verbatim from [`docs/CWS-LISTING.md`](./CWS-LISTING.md):
+   - Item name, summary, detailed description
+   - Category: Productivity
+   - Language: English
+   - Icon: `extension/icons/icon128.png`
+   - Screenshots: `docs/cws-assets/screenshot-{1..5}.png`
+   - Promo tiles: `docs/cws-assets/promo-{small,marquee}.png`
+4. **Privacy tab** — copy from [`docs/CWS-LISTING.md`](./CWS-LISTING.md):
+   - Single-purpose statement
+   - Permission justifications (all 6 + `<all_urls>`)
+   - Privacy policy URL: `https://chirag127.github.io/bookmark-mind-bs-ext/docs/PRIVACY.md`
+   - Data collection disclosures: check every "does not collect"
+5. **Distribution tab** — Public, all regions, Free
+6. **Submit for Review** — top-right
 
-If parsing fails:
-- Manifest V3 required — verify `manifest_version: 3`
-- All referenced files (icons, popup, options) must exist in the ZIP
-- No `.git/`, `node_modules/`, or test files in the ZIP
+**Expected review time**: 5-14 days (extended review triggered by
+`<all_urls>` host permission).
 
-## Step 5 — Fill the Store Listing tab
+### Grab the Extension ID
 
-Copy verbatim from `docs/CWS-LISTING.md`:
+After submission (even before approval), the CWS Developer Console shows
+your Extension ID — a 32-character string in the URL:
+`https://chrome.google.com/webstore/devconsole/<PROJECT_ID>/<EXTENSION_ID>/edit/listing`
 
-- **Item name**: `BookmarkMind — AI Bookmark Organizer`
-- **Summary**: (see CWS-LISTING.md § Summary)
-- **Detailed description**: (see § Detailed description)
-- **Category**: Productivity
-- **Language**: English
-- **Store icon (128×128)**: use `extension/icons/icon128.png`
-- **Screenshots**: upload the 3-5 PNGs you captured
-- **Promo tile (optional)**: 440×280 or 1400×560
+Copy the **EXTENSION_ID**. You'll need it for auto-publish setup.
 
-## Step 6 — Fill the Privacy Tab (CRITICAL)
+## Auto-publish setup (one-time OAuth wiring)
 
-This is where extended review triggers if incomplete.
+Once the manual submission is done, wire up automated publish for future
+versions.
 
-1. **Single purpose statement**: copy from CWS-LISTING.md § Single purpose
-2. **Permission justifications**: for EACH of the 6 permissions
-   (`bookmarks`, `storage`, `tabs`, `notifications`, `alarms`, `activeTab`)
-   and the `<all_urls>` host permission, paste the justification from
-   CWS-LISTING.md
-3. **Privacy policy URL**: the public HTTPS URL where you published PRIVACY.md
-4. **Data collection disclosures**: check ALL of:
-   - "Does not collect personally identifiable information"
-   - "Does not collect health information"
-   - "Does not collect financial and payment information"
-   - "Does not collect authentication information" (NOTE: keys are stored
-     locally, never transmitted to us; we don't collect them)
-   - "Does not collect personal communications"
-   - "Does not collect location"
-   - "Does not collect web history"
-   - "Does not collect user activity"
-   - "Does not collect website content" (NOTE: bookmark titles/URLs are
-     sent to the user-chosen LLM provider, not to BookmarkMind. We have
-     no server. Answer "does not collect" — we don't collect anything.)
+### Step 1 — Create a Google Cloud OAuth 2.0 Client
 
-## Step 7 — Distribution tab
+1. https://console.cloud.google.com/apis/credentials
+2. Select or create a project
+3. **APIs & Services → Library → search "Chrome Web Store API" → Enable**
+4. **Credentials → + Create Credentials → OAuth 2.0 Client ID**
+5. Application type: **Desktop app**
+6. Name: "BookmarkMind CWS Publisher"
+7. Download the JSON — you need `client_id` and `client_secret`
 
-- **Visibility**: Public
-- **Distribution regions**: All regions (or select specific if you want)
-- **Pricing**: Free
+### Step 2 — Get a refresh token
 
-## Step 8 — Submit for review
+Run once locally:
 
-1. Save all tabs
-2. Click **Submit for Review** (top-right)
-3. Confirm the submission dialog
+```bash
+CLIENT_ID="YOUR_CLIENT_ID"
+CLIENT_SECRET="YOUR_CLIENT_SECRET"
 
-**Expected review time**:
-- Standard: 1-3 business days
-- **Extended review**: because of the `<all_urls>` host permission,
-  expect 5-14 business days. CWS reviewers will manually verify the
-  extension doesn't abuse the permission.
+# Step 2a — open this URL in a browser, click "Allow"
+echo "https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=$CLIENT_ID&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=https://www.googleapis.com/auth/chromewebstore&access_type=offline&prompt=consent"
 
-## Step 9 — During review
+# Step 2b — Google shows a code. Paste it here:
+CODE="paste_the_code_here"
 
-CWS may email you with:
-- **Approval**: extension goes live within ~1 hour
-- **Rejection with reasons**: fix the issues, upload a new ZIP, resubmit
-- **Request for clarification**: reply via the Developer Console
+# Step 2c — exchange code for refresh token
+curl -sS -X POST https://oauth2.googleapis.com/token \
+  -d "client_id=$CLIENT_ID" \
+  -d "client_secret=$CLIENT_SECRET" \
+  -d "code=$CODE" \
+  -d "grant_type=authorization_code" \
+  -d "redirect_uri=urn:ietf:wg:oauth:2.0:oob"
 
-Common rejection reasons for `<all_urls>` extensions:
-- Insufficient permission justification → strengthen the `<all_urls>`
-  justification in CWS-LISTING.md
-- Missing privacy policy → publish PRIVACY.md and add the URL
-- Screenshots don't show the extension's core functionality → add
-  screenshots showing the provider list + a live categorization
+# Copy the "refresh_token" field
+```
 
-## Step 10 — Post-approval
+### Step 3 — Save secrets in GitHub
 
-Once live at `https://chrome.google.com/webstore/detail/<id>`:
+```bash
+gh secret set CWS_CLIENT_ID --repo chirag127/bookmark-mind-bs-ext --body "$CLIENT_ID"
+gh secret set CWS_CLIENT_SECRET --repo chirag127/bookmark-mind-bs-ext --body "$CLIENT_SECRET"
+gh secret set CWS_REFRESH_TOKEN --repo chirag127/bookmark-mind-bs-ext --body "$REFRESH_TOKEN"
+gh secret set CWS_EXTENSION_ID --repo chirag127/bookmark-mind-bs-ext --body "$EXTENSION_ID"
+```
 
-1. Add the CWS listing URL to `README.md` and `manifest.json`'s
-   `homepage_url` field (optional but good practice)
-2. Announce via GitHub release + your own channels
+## Subsequent releases (automated)
+
+Once secrets are set, every future release is:
+
+```bash
+# 1. Bump manifest.json + package.json version (in same commit)
+# 2. npm run docs         # regenerate tables from registry
+# 3. git commit -am "chore: bump v1.2.1"
+# 4. git tag v1.2.1
+# 5. git push --tags
+```
+
+`.github/workflows/cws-publish.yml` fires on the tag push:
+
+1. Verifies `manifest.json` version matches the tag
+2. Runs `npm run docs` and fails if the working tree is dirty (forces
+   you to commit the regenerated docs before tagging)
+3. Runs `npm run package` → `dist/bookmarkmind-v<ver>.zip`
+4. Refreshes CWS OAuth access token
+5. Uploads the ZIP via CWS API
+6. Publishes for review
+7. Attaches the ZIP to the GitHub Release
+
+Manual trigger (upload without publish):
+
+```
+Actions → Publish to Chrome Web Store → Run workflow → version=1.2.1, publish=false
+```
+
+## During review
+
+CWS may email:
+- **Approval**: extension goes live within ~1 hour of approval
+- **Rejection**: fix, retag with an incremented version, re-run auto-publish
+- **Clarification request**: reply via Developer Console
+
+Common rejection reasons on `<all_urls>` extensions:
+- Insufficient permission justification → strengthen `<all_urls>` block in
+  `docs/CWS-LISTING.md` + run `npm run docs`
+- Screenshots don't show core functionality → capture real screencaps
+  against real bookmark data + replace `docs/cws-assets/*.png`
+- Missing/inadequate privacy policy → strengthen `docs/PRIVACY.md`
+
+## Post-approval
+
+1. Verify listing at `https://chrome.google.com/webstore/detail/<id>`
+2. Update README.md badge to link CWS listing (optional)
 3. Monitor:
    - CWS Developer Console → Metrics for install/uninstall trends
    - CWS reviews for user feedback (respond politely)
    - GitHub Issues for bugs
 
-## Publishing updates
+## Under-the-hood
 
-For subsequent versions:
-1. Bump `version` in BOTH `extension/manifest.json` AND `package.json`
-2. `git commit -am "feat: <what changed>"` + push
-3. `npm run package` → produces new `dist/bookmarkmind-v<ver>.zip`
-4. Upload the new ZIP via CWS Dev Console → Item → Package
-5. Update store description if features changed
-6. Submit for review (updates usually approved faster than initial listing)
+Full contract:
 
-## Publisher note — verified/trusted publisher
+- **Source of truth**: `extension/lib/providers/registry.js` +
+  `extension/manifest.json`. Everything else is generated.
+- `scripts/gen-docs.mjs` → regenerates the provider table + permission
+  justifications + package.json description from those two files.
+- `scripts/package.mjs` → cross-platform ZIP builder producing
+  `dist/bookmarkmind-v<version>.zip` with manifest at ZIP root.
+- `scripts/screenshots.mjs` → headless Chrome captures 5 PNGs at 1280×800
+  into `docs/cws-assets/` from HTML mockups that use the actual UI CSS.
+- `.github/workflows/cws-publish.yml` → glues it together on tag push.
 
-After ~1 year of activity + no policy violations, Google may verify your
-publisher account which:
-- Removes the "Featured" limitation
-- Improves search ranking
-- Enables larger install counts before manual review
-
-Nothing to do — happens automatically.
+Never hand-edit generated blocks (search for `BEGIN-AUTOGEN` markers).
+Edit the source of truth + run `npm run docs`.
