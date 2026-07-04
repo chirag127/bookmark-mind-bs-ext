@@ -1,8 +1,8 @@
 {
     "name": "bookmarkmind",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "type": "module",
-    "description": "AI-powered Chrome bookmark organizer. Bring your own key for 12 built-in OpenAI-compatible providers (Groq, Gemini, Cerebras, OpenRouter, Mistral, HuggingFace, Ollama, LM Studio, LiteLLM, DeepSeek, Novita, OpenAI) or add any custom endpoint.",
+    "description": "AI-powered Chrome bookmark organizer. Bring your own key for 13 built-in OpenAI-compatible providers (Groq, Gemini, Cerebras, OpenRouter, Mistral, HuggingFace, Ollama, LM Studio, LiteLLM, OmniRoute, DeepSeek, Novita, OpenAI) or add any custom endpoint.",
     "main": "manifest.json",
     "scripts": {
         "build": "echo 'No build process needed - pure vanilla JS extension'",
@@ -16,7 +16,8 @@
         "format": "biome format --write ./extension",
         "format:check": "biome format ./extension",
         "check": "biome check --write ./extension",
-        "package": "zip -r bookmarkmind-v1.1.0.zip . -x '*.git*' 'node_modules/*' '*.zip' '*.md' 'package*.json' 'create_simple_icons.html' 'icons/create_icons.py'"
+        "package": "node scripts/package.mjs",
+        "package:cws": "node scripts/package.mjs"
     },
     "repository": {
         "type": "git",

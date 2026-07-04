@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="560" viewBox="0 0 1400 560">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4285f4"/>
+      <stop offset="1" stop-color="#1a73e8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1400" height="560" fill="url(#g)"/>
+  <text x="80" y="140" fill="#ffffff" font-family="Inter, system-ui, sans-serif"
+        font-size="72" font-weight="800">BookmarkMind</text>
+  <text x="80" y="200" fill="#e8f0fe" font-family="Inter, sans-serif" font-size="32">
+    AI Bookmark Organizer · Bring your own key
+  </text>
+  <g transform="translate(80, 280)" font-family="Inter, sans-serif" fill="#ffffff">
+    <text x="0" y="30" font-size="24">✨ 13 built-in OpenAI-compatible LLM providers</text>
+    <text x="0" y="70" font-size="24">📁 Functional folder hierarchy: what services DO, not who provides</text>
+    <text x="0" y="110" font-size="24">🔐 AES-GCM encrypted keys · no server · no telemetry</text>
+    <text x="0" y="150" font-size="24">🏠 Local models supported: Ollama, LM Studio, OmniRoute, LiteLLM</text>
+    <text x="0" y="190" font-size="24">🆓 Permanent free tiers: Groq, Cerebras, Gemini, OpenRouter, Mistral, HF</text>
+  </g>
+</svg>

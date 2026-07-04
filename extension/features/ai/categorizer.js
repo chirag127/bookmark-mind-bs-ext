@@ -1,3 +1,4 @@
+import * as keyStore from '../../lib/providers/keyStore.js';
 import { AnalyticsService } from '../analytics/analyticsService.js';
 import { BookmarkService } from '../bookmarks/bookmarkService.js';
 import { FolderManager } from '../bookmarks/folderManager.js';
@@ -56,11 +57,14 @@ export class Categorizer {
 
       // Get settings first
       const settings = await this._getSettings();
-      if (!settings.apiKey) {
-        throw new Error('API key not configured.');
+
+      // v1.2.0+: check provider keyStore first, fall back to legacy apiKey
+      const configuredProviders = await keyStore.list();
+      if (configuredProviders.length === 0 && !settings.apiKey) {
+        throw new Error('No AI providers configured. Open BookmarkMind Options → Add Provider.');
       }
 
-      this.aiProcessor.setApiKey(
+      await this.aiProcessor.setApiKey(
         settings.apiKey,
         settings.cerebrasApiKey || null,
         settings.groqApiKey || null
@@ -172,11 +176,11 @@ export class Categorizer {
       );
 
       // Initialize services if needed (service worker might have restarted)
-      if (!this.aiProcessor.apiKey && state.settings?.apiKey) {
-        this.aiProcessor.setApiKey(
-          state.settings.apiKey,
-          state.settings.cerebrasApiKey || null,
-          state.settings.groqApiKey || null
+      if (!this.aiProcessor.apiKey) {
+        await this.aiProcessor.setApiKey(
+          state.settings?.apiKey || null,
+          state.settings?.cerebrasApiKey || null,
+          state.settings?.groqApiKey || null
         );
       }
 
@@ -207,6 +211,39 @@ export class Categorizer {
         learningData,
         this.callbacks.onMarkAsAIMoved // Pass the callback here
       );
+
+      // v1.2.0+: apply the moves. Legacy AIProcessor did this inline; the
+      // new provider-driven AIProcessor returns [{category, title, confidence}]
+      // and the categorizer is responsible for the folder-create + move.
+      for (let i = 0; i < _results.length; i++) {
+        const bookmark = batch[i];
+        const result = _results[i];
+        if (!bookmark || !result || !result.category) continue;
+        try {
+          // Mark AI-moved so learningService doesn't record it as a user correction
+          try {
+            if (this.callbacks.onMarkAsAIMoved) this.callbacks.onMarkAsAIMoved(bookmark.id);
+            else
+              await chrome.runtime.sendMessage({
+                action: 'markBookmarkAsAIMoved',
+                bookmarkId: bookmark.id
+              });
+            await chrome.storage.local.set({ [`ai_moved_${bookmark.id}`]: Date.now() });
+          } catch {
+            /* non-fatal */
+          }
+          // Ensure folder exists — AI returns "Category > Subcategory"; FolderManager expects "/"
+          const path = result.category.split(/\s*>\s*/).join('/');
+          const folderId = await this.folderManager._createCategoryFolder(path, '1');
+          // Update title if AI provided a better one, then move
+          if (result.title && result.title !== bookmark.title) {
+            await chrome.bookmarks.update(bookmark.id, { title: result.title });
+          }
+          await chrome.bookmarks.move(bookmark.id, { parentId: folderId });
+        } catch (mvErr) {
+          console.warn(`[Categorizer] move failed for ${bookmark.id}:`, mvErr?.message);
+        }
+      }
 
       // Update state
       state.currentIndex += state.batchSize;

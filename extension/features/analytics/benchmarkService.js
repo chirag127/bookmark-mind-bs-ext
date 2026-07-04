@@ -1,6 +1,13 @@
 /**
  * BookmarkMind - Benchmark Service
- * Automated benchmark suite for evaluating categorization accuracy and performance
+ * Automated benchmark suite for evaluating categorization accuracy and performance.
+ *
+ * KNOWN LIMITATION (v1.2.0): This service deep-inspects legacy AIProcessor
+ * internals (`geminiModels[]`, `cerebrasModels[]`, `groqModels[]`) that no
+ * longer exist in the provider-driven rewrite. Running a benchmark will
+ * throw a "no providers configured" error until this service is rewritten
+ * to iterate the provider registry via chatOrchestrator. Tracked in
+ * follow-up.
  */
 
 export class BenchmarkService {

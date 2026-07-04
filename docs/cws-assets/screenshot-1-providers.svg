@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800">
+  <rect width="1280" height="800" fill="#0f1419"/>
+  <rect x="0" y="0" width="1280" height="64" fill="#1a73e8"/>
+  <text x="24" y="42" fill="#ffffff" font-family="Inter, sans-serif" font-size="22" font-weight="600">
+    BookmarkMind · Options → Providers
+  </text>
+  <text x="60" y="180" fill="#ffffff" font-family="Inter, sans-serif" font-size="42" font-weight="700">
+    13 built-in providers, drag to reorder
+  </text>
+  <g transform="translate(60, 260)" font-family="Inter, sans-serif" fill="#e8f0fe">
+    <text x="0" y="0" font-size="24">• Groq · Cerebras · Google Gemini · OpenRouter · Mistral</text>
+    <text x="0" y="60" font-size="24">• HuggingFace · Novita · DeepSeek · OpenAI</text>
+    <text x="0" y="120" font-size="24">• LM Studio · Ollama · LiteLLM · OmniRoute (all localhost)</text>
+    <text x="0" y="180" font-size="24">• Plus: custom OpenAI-compat URL for anything else</text>
+  </g>
+  <text x="60" y="760" fill="#5f6368" font-family="Inter, sans-serif" font-size="14">
+    Placeholder screenshot — replace with actual extension screencap before CWS submission.
+  </text>
+</svg>
