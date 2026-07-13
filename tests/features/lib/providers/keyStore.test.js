@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals'
+import { webcrypto } from 'node:crypto'
 
 // Reset modules between tests to reload the mocked crypto/chrome per test
 async function loadKeyStore() {
@@ -44,8 +45,8 @@ const mockChromeStorage = () => {
 
 describe('providers/keyStore', () => {
   beforeEach(() => {
+    Object.defineProperty(globalThis, 'crypto', { value: webcrypto, configurable: true })
     globalThis.chrome = { storage: mockChromeStorage() }
-    // node's crypto.subtle is available in Node 22 globally
   })
 
   it('set → get round-trip returns plaintext', async () => {
